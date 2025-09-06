@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Compare</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Student Features — Compare Two Students</h1>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+      <label>
+        Student A
+        <select id="selA"></select>
+      </label>
+      <label>
+        Student B
+        <select id="selB"></select>
+      </label>
+      <button id="compareBtn">Compare</button>
+      <div id="result" class="result" aria-live="polite"></div>
+    </section>
+
+    <section class="panels">
+      <article class="student-frame" id="frameA">
+        <div class="photo"><img id="photoA" src="" alt="Student A photo"></div>
+        <table id="tableA" class="features"></table>
+      </article>
+
+      <article class="student-frame" id="frameB">
+        <div class="photo"><img id="photoB" src="" alt="Student B photo"></div>
+        <table id="tableB" class="features"></table>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <small>Static demo — replace sample data or wire to your backend.</small>
+  </footer>
+
+  <script>
+    // Sample data; replace with server data as needed.
+    const students = [
+      { id: 's1', name: 'Aisha Khan', age: 20, grade: 'A', major: 'Computer Science', photo: 'https://via.placeholder.com/180?text=Aisha' },
+      { id: 's2', name: 'Rohan Patel', age: 21, grade: 'B+', major: 'Mathematics', photo: 'https://via.placeholder.com/180?text=Rohan' },
+      { id: 's3', name: 'Meera Singh', age: 20, grade: 'A-', major: 'Physics', photo: 'https://via.placeholder.com/180?text=Meera' }
+    ];
+
+    const selA = document.getElementById('selA');
+    const selB = document.getElementById('selB');
+    const photoA = document.getElementById('photoA');
+    const photoB = document.getElementById('photoB');
+    const tableA = document.getElementById('tableA');
+    const tableB = document.getElementById('tableB');
+    const compareBtn = document.getElementById('compareBtn');
+    const result = document.getElementById('result');
+
+    function populateSelects() {
+      students.forEach(s => {
+        const optA = document.createElement('option'); optA.value = s.id; optA.textContent = s.name; selA.appendChild(optA);
+        const optB = document.createElement('option'); optB.value = s.id; optB.textContent = s.name; selB.appendChild(optB);
+      });
+      selA.selectedIndex = 0; selB.selectedIndex = Math.min(1, students.length-1);
+    }
+
+    function studentById(id){ return students.find(s => s.id === id) || students[0]; }
+
+    function renderFrame(student, tableEl, photoEl) {
+      photoEl.src = student.photo;
+      photoEl.alt = student.name + ' photo';
+      tableEl.innerHTML = '';
+      const entries = { Name: student.name, Age: student.age, Grade: student.grade, Major: student.major };
+      for (const [k,v] of Object.entries(entries)){
+        const tr = document.createElement('tr');
+        tr.dataset.key = k;
+        const tdK = document.createElement('th'); tdK.textContent = k; const tdV = document.createElement('td'); tdV.textContent = v;
+        tr.appendChild(tdK); tr.appendChild(tdV);
+        tableEl.appendChild(tr);
+      }
+    }
+
+    function compare() {
+      // clear previous marks
+      tableA.querySelectorAll('tr').forEach(t => t.classList.remove('diff'));
+      tableB.querySelectorAll('tr').forEach(t => t.classList.remove('diff'));
+
+      const a = studentById(selA.value); const b = studentById(selB.value);
+      let diffCount = 0;
+      const keys = ['Name','Age','Grade','Major'];
+      keys.forEach(key => {
+        const va = String(a[key.toLowerCase()] || '');
+        const vb = String(b[key.toLowerCase()] || '');
+        if (va !== vb) {
+          diffCount++;
+          // mark rows with same data-key
+          tableA.querySelectorAll(`tr[data-key="${key}"]`).forEach(t=>t.classList.add('diff'));
+          tableB.querySelectorAll(`tr[data-key="${key}"]`).forEach(t=>t.classList.add('diff'));
+        }
+      });
+      result.textContent = diffCount ? `${diffCount} difference(s) found` : 'No differences';
+    }
+
+    // initial setup
+    populateSelects();
+    renderFrame(studentById(selA.value), tableA, photoA);
+    renderFrame(studentById(selB.value), tableB, photoB);
+
+    selA.addEventListener('change', ()=> renderFrame(studentById(selA.value), tableA, photoA));
+    selB.addEventListener('change', ()=> renderFrame(studentById(selB.value), tableB, photoB));
+    compareBtn.addEventListener('click', compare);
+  </script>
+</body>
+</html>
